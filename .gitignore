@@ -1,0 +1,2 @@
+# Ignore environment variable file containing sensitive information
+env.sh
