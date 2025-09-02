@@ -2,7 +2,7 @@
 
 Author: [Kayvan Sylvan](https://git.standard.re/kayvan)
 
-This repo provides **very fast, copy/paste setup** for recommended (opinionated) Model Context Protocol (MCP) servers for use with **Claude Code**. It currently includes a unified launcher script that can start multiple servers (GitHub, Ref Tools, Brave Search, and Sequential Thinking) with automatic installation.
+This repo provides **very fast, copy/paste setup** for recommended (opinionated) Model Context Protocol (MCP) servers for use with **Claude Code**. It currently includes a unified launcher script that can start multiple servers (Asana, GitHub, Ref Tools, Brave Search, and Sequential Thinking) with automatic installation.
 
 ---
 
@@ -28,7 +28,7 @@ chmod +x ./mcp.sh && ./mcp.sh install
 ./mcp.sh install
 
 # Install specific servers
-./mcp.sh install brave github
+./mcp.sh install brave github_public
 
 # Preview what will be installed
 ./mcp.sh install --dry-run
@@ -94,13 +94,19 @@ Run `mcp.sh` without any arguments to see the list of MCP servers:
 
 ```bash
 ./mcp.sh
-Usage: ./mcp.sh {github|ref|sequentialthinking}
+Usage: ./mcp.sh {asana|github_enterprise|github_public|ref|sequentialthinking}
 ```
 
-GitHub MCP server:
+GitHub Enterprise MCP server:
 
 ```bash
-./mcp.sh github
+./mcp.sh github_enterprise
+```
+
+GitHub Public MCP server:
+
+```bash
+./mcp.sh github_public
 ```
 
 Ref Tools MCP server:
@@ -109,11 +115,17 @@ Ref Tools MCP server:
 ./mcp.sh ref
 ```
 
-What happens for `github`:
+What happens for `github_enterprise`:
 
 1. Loads `env.sh` if present
 2. Runs Docker image: `ghcr.io/github/github-mcp-server`
 3. Passes through `GITHUB_ENTERPRISE_ACCESS_TOKEN` and `GITHUB_ENTERPRISE_HOST`
+
+What happens for `github_public`:
+
+1. Loads `env.sh` if present
+2. Runs Docker image: `ghcr.io/github/github-mcp-server`
+3. Passes through `GITHUB_PUBLIC_ACCESS_TOKEN` (connects to GitHub.com)
 
 What happens for `ref`:
 
@@ -135,23 +147,44 @@ The easiest way to register all servers at once:
 
 ### Individual Server Setup
 
-#### GitHub Server
+#### GitHub Enterprise Server
 
-Provides access to GitHub repositories, issues, and pull requests.
+Provides access to GitHub Enterprise repositories, issues, and pull requests.
 
 **Quick install:**
 
 ```bash
-./mcp.sh install github
+./mcp.sh install github_enterprise
 ```
 
 **Manual install:**
 
 ```bash
-claude mcp add --scope user github "${PWD}/mcp.sh" github
+claude mcp add --scope user github_enterprise "${PWD}/mcp.sh" github_enterprise
 ```
 
-**Requirements:** `GITHUB_ENTERPRISE_ACCESS_TOKEN` environment variable
+**Requirements:**
+- `GITHUB_ENTERPRISE_ACCESS_TOKEN` environment variable
+- `GITHUB_ENTERPRISE_HOST` environment variable (your GitHub Enterprise base URL)
+
+#### GitHub Public Server
+
+Provides access to GitHub.com repositories, issues, and pull requests.
+
+**Quick install:**
+
+```bash
+./mcp.sh install github_public
+```
+
+**Manual install:**
+
+```bash
+claude mcp add --scope user github_public "${PWD}/mcp.sh" github_public
+```
+
+**Requirements:**
+- `GITHUB_PUBLIC_ACCESS_TOKEN` environment variable
 
 #### Ref Tools Server
 
@@ -190,6 +223,32 @@ claude mcp add --scope user brave "${PWD}/mcp.sh" brave
 - `BRAVE_API_KEY` environment variable
 - Get your API key from [Brave Search API](https://brave.com/search/api/)
 
+#### Asana Server
+
+Provides access to Asana workspaces, projects, and tasks for project management integration.
+
+**Quick install:**
+
+```bash
+./mcp.sh install asana
+```
+
+**Manual install:**
+
+```bash
+claude mcp add --scope user asana "${PWD}/mcp.sh" asana
+```
+
+**Requirements:**
+- OAuth authentication (handled automatically on first use)
+- Access to Asana workspace
+
+**Features:**
+- List workspaces and projects
+- Search and manage tasks
+- Create and update projects
+- Track task progress and assignments
+
 #### Sequential Thinking Server
 
 Provides structured thinking and reasoning capabilities.
@@ -217,7 +276,7 @@ Verification:
 claude mcp list
 ```
 
-You should see entries named `github` and/or `ref`. Then in the editor, ask Claude to list a repository file (GitHub) or use a ref-tools command to confirm connectivity.
+You should see entries named `asana`, `github_enterprise`, `github_public`, `ref`, etc. Then in the editor, ask Claude to list a repository file (GitHub), search Asana tasks, or use a ref-tools command to confirm connectivity.
 
 ---
 

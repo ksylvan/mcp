@@ -26,6 +26,7 @@ NC='\033[0m' # No Color
 # Server definitions using functions for compatibility
 get_server_name() {
     case "$1" in
+        asana) echo "Asana Server" ;;
         brave) echo "Brave Search" ;;
         github_enterprise) echo "GitHub Enterprise" ;;
         github_public) echo "GitHub Public" ;;
@@ -37,13 +38,14 @@ get_server_name() {
 
 get_server_command() {
     case "$1" in
-        brave|github_enterprise|github_public|ref|sequentialthinking) echo "$1" ;;
+        asana|brave|github_enterprise|github_public|ref|sequentialthinking) echo "$1" ;;
         *) echo "" ;;
     esac
 }
 
 get_server_env_vars() {
     case "$1" in
+        asana) echo "" ;;
         brave) echo "BRAVE_API_KEY" ;;
         github) echo "GITHUB_ENTERPRISE_ACCESS_TOKEN" ;;
         github_public) echo "GITHUB_PUBLIC_ACCESS_TOKEN" ;;
@@ -65,6 +67,7 @@ Commands:
     <server-name>         Run a specific MCP server
 
 Servers:
+    asana                 Asana Server MCP server
     brave                 Brave Search MCP server
     github_enterprise     GitHub Enterprise MCP server
     github_public         GitHub Public MCP server
@@ -126,6 +129,7 @@ install_server() {
     local dry_run="$2"
     local force="$3"
     local verbose="$4"
+    local already_installed="${5:-}"
 
     # Check if server is defined
     local display_name
@@ -152,8 +156,17 @@ install_server() {
         done
     fi
 
-    # Check if already installed
-    if is_server_installed "$name"; then
+    # Check if already installed (use passed parameter if available)
+    local server_installed="${already_installed}"
+    if [[ -z "$server_installed" ]]; then
+        if is_server_installed "$name"; then
+            server_installed="true"
+        else
+            server_installed="false"
+        fi
+    fi
+
+    if [[ "$server_installed" == "true" ]]; then
         if [[ "$force" == "true" ]]; then
             if [[ "$dry_run" == "true" ]]; then
                 echo -e "${BLUE}[DRY RUN] Would remove existing ${display_name} server${NC}"
@@ -269,7 +282,7 @@ handle_install() {
 
     # If no servers specified, install all
     if [[ ${#servers[@]} -eq 0 ]]; then
-        servers=("brave" "github_enterprise" "github_public" "ref" "sequentialthinking")
+        servers=("asana" "brave" "github_enterprise" "github_public" "ref" "sequentialthinking")
         echo -e "${BLUE}Installing all MCP servers...${NC}\n"
     else
         echo -e "${BLUE}Installing selected MCP servers...${NC}\n"
@@ -279,18 +292,27 @@ handle_install() {
     local installed=0
     local skipped=0
 
+    # Get initial server list to minimize repeated calls
+    local initial_mcp_list
+    initial_mcp_list=$(get_mcp_list)
+
     for server in "${servers[@]}"; do
-        if is_server_installed "$server" && [[ "$force" != "true" ]]; then
+        local was_installed="false"
+        if echo "$initial_mcp_list" | grep -q "^${server}:"; then
+            was_installed="true"
+        fi
+
+        if [[ "$was_installed" == "true" ]] && [[ "$force" != "true" ]]; then
             ((skipped++))
         fi
 
-        if ! install_server "$server" "$dry_run" "$force" "$verbose"; then
+        if ! install_server "$server" "$dry_run" "$force" "$verbose" "$was_installed"; then
             # Only count as failure if it wasn't already installed
-            if ! is_server_installed "$server" || [[ "$force" == "true" ]]; then
+            if [[ "$was_installed" == "false" ]] || [[ "$force" == "true" ]]; then
                 ((failed++))
             fi
         else
-            if ! is_server_installed "$server" || [[ "$force" == "true" ]]; then
+            if [[ "$was_installed" == "false" ]] || [[ "$force" == "true" ]]; then
                 ((installed++))
             fi
         fi
@@ -330,6 +352,10 @@ case "$1" in
 
     help|--help|-h)
         show_help
+        ;;
+
+    asana)
+        exec npx mcp-remote https://mcp.asana.com/sse
         ;;
 
     brave)
