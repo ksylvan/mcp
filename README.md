@@ -71,8 +71,8 @@ cp env-example.sh env.sh
 
 Edit env.sh and set:
 
-- export GITHUB_PERSONAL_ACCESS_TOKEN={{your Personal Access Token}}
-- export GITHUB_HOST={{Your GitHub base URL}}
+- export GITHUB_ENTERPRISE_ACCESS_TOKEN={{your Personal Access Token}}
+- export GITHUB_ENTERPRISE_HOST={{Your GitHub base URL}}
 - export REF_API_KEY={{Your Ref API}}
 - export BRAVE_API_KEY={{Your Brave Search API key}}
 
@@ -113,7 +113,7 @@ What happens for `github`:
 
 1. Loads `env.sh` if present
 2. Runs Docker image: `ghcr.io/github/github-mcp-server`
-3. Passes through `GITHUB_PERSONAL_ACCESS_TOKEN` and `GITHUB_HOST`
+3. Passes through `GITHUB_ENTERPRISE_ACCESS_TOKEN` and `GITHUB_ENTERPRISE_HOST`
 
 What happens for `ref`:
 
@@ -151,7 +151,7 @@ Provides access to GitHub repositories, issues, and pull requests.
 claude mcp add --scope user github "${PWD}/mcp.sh" github
 ```
 
-**Requirements:** `GITHUB_PERSONAL_ACCESS_TOKEN` environment variable
+**Requirements:** `GITHUB_ENTERPRISE_ACCESS_TOKEN` environment variable
 
 #### Ref Tools Server
 
@@ -238,7 +238,7 @@ Then restart the server (no need to re-run the add command).
 - Rotate your PAT regularly.
 - Use separate tokens for automation vs. personal use.
 - Never commit `env.sh`.
-- If using a self-hosted GitHub Enterprise Server, ensure `GITHUB_HOST` matches the base URL (including protocol).
+- If using a self-hosted GitHub Enterprise Server, ensure `GITHUB_ENTERPRISE_HOST` matches the base URL (including protocol).
 
 ---
 
@@ -275,7 +275,7 @@ If you need new env vars, document them in `env-example.sh` (the script already 
 | Issue | Fix |
 |-------|-----|
 | Docker image not found | Check network / image name or pin a tag |
-| Auth failures | Confirm PAT scopes & value loaded (echo `$GITHUB_PERSONAL_ACCESS_TOKEN` length) |
+| Auth failures | Confirm PAT scopes & value loaded (echo `$GITHUB_ENTERPRISE_ACCESS_TOKEN` length) |
 | Claude not showing server | Verify absolute path & executable bit; restart client |
 
 Quick debug:

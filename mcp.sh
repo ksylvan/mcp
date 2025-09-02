@@ -27,7 +27,8 @@ NC='\033[0m' # No Color
 get_server_name() {
     case "$1" in
         brave) echo "Brave Search" ;;
-        github) echo "GitHub" ;;
+        github_enterprise) echo "GitHub Enterprise" ;;
+        github_public) echo "GitHub Public" ;;
         ref) echo "Ref Tools" ;;
         sequentialthinking) echo "Sequential Thinking" ;;
         *) echo "" ;;
@@ -36,7 +37,7 @@ get_server_name() {
 
 get_server_command() {
     case "$1" in
-        brave|github|ref|sequentialthinking) echo "$1" ;;
+        brave|github_enterprise|github_public|ref|sequentialthinking) echo "$1" ;;
         *) echo "" ;;
     esac
 }
@@ -44,7 +45,8 @@ get_server_command() {
 get_server_env_vars() {
     case "$1" in
         brave) echo "BRAVE_API_KEY" ;;
-        github) echo "GITHUB_PERSONAL_ACCESS_TOKEN" ;;
+        github) echo "GITHUB_ENTERPRISE_ACCESS_TOKEN" ;;
+        github_public) echo "GITHUB_PUBLIC_ACCESS_TOKEN" ;;
         ref) echo "" ;;
         sequentialthinking) echo "" ;;
         *) echo "" ;;
@@ -57,27 +59,30 @@ show_help() {
 Usage: $0 [COMMAND] [OPTIONS]
 
 Commands:
-  install [servers...]  Install MCP servers to Claude Code
-  help                  Show this help message
-  <server-name>         Run a specific MCP server
+    install [servers...]  Install MCP servers to Claude Code
+    list                  List installed MCP servers
+    help                  Show this help message
+    <server-name>         Run a specific MCP server
 
 Servers:
-  brave                 Brave Search MCP server
-  github                GitHub MCP server
-  ref                   Ref Tools MCP server
-  sequentialthinking    Sequential Thinking MCP server
+    brave                 Brave Search MCP server
+    github_enterprise     GitHub Enterprise MCP server
+    github_public         GitHub Public MCP server
+    ref                   Ref Tools MCP server
+    sequentialthinking    Sequential Thinking MCP server
 
 Install Options:
-  --dry-run            Show what would be installed without making changes
-  --force              Re-register servers (remove existing before adding)
-  --verbose            Show detailed output
+    --dry-run            Show what would be installed without making changes
+    --force              Re-register servers (remove existing before adding)
+    --verbose            Show detailed output
 
 Examples:
-  $0 install                    # Install all servers
-  $0 install brave github       # Install specific servers
-  $0 install --dry-run          # Preview installation
-  $0 install --force brave      # Force reinstall brave server
-  $0 brave                      # Run brave server directly
+    $0 install                         # Install all servers
+    $0 install brave github_enterprise # Install specific servers
+    $0 install --dry-run               # Preview installation
+    $0 install --force brave           # Force reinstall brave server
+    $0 list                            # List installed servers
+    $0 brave                           # Run brave server directly
 
 EOF
 }
@@ -92,10 +97,27 @@ check_claude_cli() {
     return 0
 }
 
+# Cache for claude mcp list output
+CLAUDE_MCP_LIST_CACHE=""
+
+# Get cached claude mcp list output
+get_mcp_list() {
+    if [[ -z "$CLAUDE_MCP_LIST_CACHE" ]]; then
+        CLAUDE_MCP_LIST_CACHE=$(claude mcp list 2>/dev/null)
+        export CLAUDE_MCP_LIST_CACHE
+    fi
+    echo "$CLAUDE_MCP_LIST_CACHE"
+}
+
+# Clear the mcp list cache (call after adding/removing servers)
+clear_mcp_list_cache() {
+    CLAUDE_MCP_LIST_CACHE=""
+}
+
 # Check if server is already installed
 is_server_installed() {
     local name="$1"
-    claude mcp list 2>/dev/null | grep -q "^${name}\s" || claude mcp list 2>/dev/null | grep -q "^${name}$"
+    get_mcp_list | grep -q "^${name}:"
 }
 
 # Install a single server
@@ -138,9 +160,10 @@ install_server() {
             else
                 [[ "$verbose" == "true" ]] && echo -e "${BLUE}Removing existing ${display_name} server...${NC}"
                 claude mcp remove "$name" 2>/dev/null || true
+                clear_mcp_list_cache
             fi
         else
-            echo -e "${GREEN}✓${NC} ${display_name} server already installed (use --force to reinstall)"
+            echo -e "${GREEN}Server ${display_name} already installed. Skipping.${NC}"
             return 0
         fi
     fi
@@ -171,6 +194,7 @@ install_server() {
         [[ "$verbose" == "true" ]] && echo -e "${BLUE}Installing ${display_name} server...${NC}"
         if eval "$cmd" 2>/dev/null; then
             echo -e "${GREEN}✓${NC} ${display_name} server installed successfully"
+            clear_mcp_list_cache
         else
             echo -e "${RED}✗${NC} Failed to install ${display_name} server"
             return 1
@@ -178,6 +202,24 @@ install_server() {
     fi
 
     return 0
+}
+
+# List command handler
+handle_list() {
+    # Check Claude CLI
+    if ! check_claude_cli; then
+        return 1
+    fi
+
+    echo -e "${BLUE}Installed MCP servers:${NC}\n"
+
+    local mcp_output
+    mcp_output=$(get_mcp_list)
+    if [[ -z "$mcp_output" ]] || ! echo "$mcp_output" | grep -v "^$"; then
+        echo -e "${YELLOW}No MCP servers installed.${NC}"
+        echo "Use '$0 install' to install servers."
+        return 0
+    fi
 }
 
 # Install command handler
@@ -227,28 +269,50 @@ handle_install() {
 
     # If no servers specified, install all
     if [[ ${#servers[@]} -eq 0 ]]; then
-        servers=("brave" "github" "ref" "sequentialthinking")
+        servers=("brave" "github_enterprise" "github_public" "ref" "sequentialthinking")
         echo -e "${BLUE}Installing all MCP servers...${NC}\n"
     else
         echo -e "${BLUE}Installing selected MCP servers...${NC}\n"
     fi
 
     local failed=0
+    local installed=0
+    local skipped=0
+
     for server in "${servers[@]}"; do
+        if is_server_installed "$server" && [[ "$force" != "true" ]]; then
+            ((skipped++))
+        fi
+
         if ! install_server "$server" "$dry_run" "$force" "$verbose"; then
-            ((failed++))
+            # Only count as failure if it wasn't already installed
+            if ! is_server_installed "$server" || [[ "$force" == "true" ]]; then
+                ((failed++))
+            fi
+        else
+            if ! is_server_installed "$server" || [[ "$force" == "true" ]]; then
+                ((installed++))
+            fi
         fi
     done
 
     echo ""
     if [[ "$dry_run" == "true" ]]; then
         echo -e "${BLUE}Dry run complete. No changes were made.${NC}"
-    elif [[ $failed -eq 0 ]]; then
-        echo -e "${GREEN}All requested servers installed successfully!${NC}"
-        echo "Restart Claude Code to use the new servers."
     else
-        echo -e "${YELLOW}Installation complete with $failed error(s).${NC}"
-        return 1
+        if [[ $installed -gt 0 ]]; then
+            echo -e "${GREEN}Installed $installed server(s) successfully.${NC}"
+        fi
+        if [[ $skipped -gt 0 ]]; then
+            echo -e "${BLUE}Skipped $skipped already installed server(s).${NC}"
+        fi
+        if [[ $failed -gt 0 ]]; then
+            echo -e "${RED}Failed to install $failed server(s).${NC}"
+            return 1
+        fi
+        if [[ $installed -gt 0 ]]; then
+            echo "Restart Claude Code to use the new servers."
+        fi
     fi
 
     return 0
@@ -260,6 +324,10 @@ case "$1" in
         handle_install "$@"
         ;;
 
+    list)
+        handle_list
+        ;;
+
     help|--help|-h)
         show_help
         ;;
@@ -268,8 +336,15 @@ case "$1" in
         exec npx -y @brave/brave-search-mcp-server --transport stdio
         ;;
 
-    github)
+    github_enterprise)
+        export GITHUB_HOST="$GITHUB_ENTERPRISE_HOST"
+        export GITHUB_PERSONAL_ACCESS_TOKEN="$GITHUB_ENTERPRISE_ACCESS_TOKEN"
         exec docker run --rm -i -e GITHUB_PERSONAL_ACCESS_TOKEN -e GITHUB_HOST "$GITHUB_DOCKER_IMAGE"
+        ;;
+
+    github_public)
+        export GITHUB_PERSONAL_ACCESS_TOKEN="$GITHUB_PUBLIC_ACCESS_TOKEN"
+        exec docker run --rm -i -e GITHUB_PERSONAL_ACCESS_TOKEN "$GITHUB_DOCKER_IMAGE"
         ;;
 
     ref)
