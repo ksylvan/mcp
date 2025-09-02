@@ -11,7 +11,9 @@ This repo provides **very fast, copy/paste setup** for recommended (opinionated)
 **Install all MCP servers with one command:**
 
 ```bash
-chmod +x ./mcp.sh && ./mcp.sh install
+git clone https://git.standard.re/kayvan/mcp
+cd mcp
+./mcp.sh install
 ```
 
 ### Prerequisites
@@ -164,6 +166,7 @@ claude mcp add --scope user github_enterprise "${PWD}/mcp.sh" github_enterprise
 ```
 
 **Requirements:**
+
 - `GITHUB_ENTERPRISE_ACCESS_TOKEN` environment variable
 - `GITHUB_ENTERPRISE_HOST` environment variable (your GitHub Enterprise base URL)
 
@@ -184,6 +187,7 @@ claude mcp add --scope user github_public "${PWD}/mcp.sh" github_public
 ```
 
 **Requirements:**
+
 - `GITHUB_PUBLIC_ACCESS_TOKEN` environment variable
 
 #### Ref Tools Server
@@ -240,10 +244,12 @@ claude mcp add --scope user asana "${PWD}/mcp.sh" asana
 ```
 
 **Requirements:**
+
 - OAuth authentication (handled automatically on first use)
 - Access to Asana workspace
 
 **Features:**
+
 - List workspaces and projects
 - Search and manage tasks
 - Create and update projects
