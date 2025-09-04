@@ -1,7 +1,11 @@
 {
-    "words": [
-        "asana",
-        "GHES",
-        "sequentialthinking"
-    ]
+	"words": [
+		"asana",
+		"GHES",
+		"korotovsky",
+		"mpim",
+		"sequentialthinking",
+		"XOXP"
+	],
+	"ignorePaths": ["env.sh", "env-example.sh"]
 }

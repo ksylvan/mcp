@@ -2,7 +2,7 @@
 
 Author: [Kayvan Sylvan](https://git.standard.re/kayvan)
 
-This repo provides **very fast, copy/paste setup** for recommended (opinionated) Model Context Protocol (MCP) servers for use with **Claude Code**. It currently includes a unified launcher script that can start multiple servers (Asana, GitHub, Ref Tools, Brave Search, and Sequential Thinking) with automatic installation.
+This repo provides **very fast, copy/paste setup** for recommended (opinionated) Model Context Protocol (MCP) servers for use with **Claude Code**. It currently includes a unified launcher script that can start multiple servers (Asana, GitHub, Ref Tools, Brave Search, Slack, and Sequential Thinking) with automatic installation.
 
 ---
 
@@ -52,7 +52,7 @@ The `install` command is idempotent - run it multiple times safely. It will skip
 - `env-example.sh` – example environment variable file to copy and customize
 - `env.sh` – your local (ignored) secrets file (create this yourself)
 
----
+---~
 
 ## 1. Prerequisites
 
@@ -77,6 +77,7 @@ Edit env.sh and set:
 - export GITHUB_ENTERPRISE_HOST={{Your GitHub base URL}}
 - export REF_API_KEY={{Your Ref API}}
 - export BRAVE_API_KEY={{Your Brave Search API key}}
+- export SLACK_MCP_XOXP_TOKEN={{Your Slack User OAuth Token}}
 
 Recommended minimal PAT scopes (adjust to your needs):
 
@@ -96,7 +97,7 @@ Run `mcp.sh` without any arguments to see the list of MCP servers:
 
 ```bash
 ./mcp.sh
-Usage: ./mcp.sh {asana|github_enterprise|github_public|ref|sequentialthinking}
+Usage: ./mcp.sh {asana|github_enterprise|github_public|ref|slack|sequentialthinking}
 ```
 
 GitHub Enterprise MCP server:
@@ -271,6 +272,58 @@ Provides structured thinking and reasoning capabilities.
 claude mcp add --scope user sequentialthinking "${PWD}/mcp.sh" sequentialthinking
 ```
 
+#### Slack Server
+
+Provides access to Slack channels, direct messages, and workspace data for team collaboration integration.
+
+Source: [korotovsky/slack-mcp-server](https://github.com/korotovsky/slack-mcp-server)
+
+**Quick install:**
+
+```bash
+./mcp.sh install slack
+```
+
+**Manual install:**
+
+```bash
+claude mcp add --scope user slack "${PWD}/mcp.sh" slack
+```
+
+**Requirements:**
+
+- `SLACK_MCP_XOXP_TOKEN` environment variable (User OAuth Token)
+
+**Token Setup:**
+
+To get your SLACK_MCP_XOXP_TOKEN:
+
+1. Go to [api.slack.com/apps](https://api.slack.com/apps) and create a new app
+2. Under "OAuth & Permissions", add these scopes:
+   - `channels:history` - View messages in public channels
+   - `channels:read` - View basic information about public channels
+   - `groups:history` - View messages in private channels
+   - `groups:read` - View basic information about private channels
+   - `im:history` - View messages in direct messages
+   - `im:read` - View basic information about direct messages
+   - `im:write` - Start direct messages
+   - `mpim:history` - View messages in group direct messages
+   - `mpim:read` - View basic information about group direct messages
+   - `mpim:write` - Start group direct messages
+   - `users:read` - View people in a workspace
+   - `chat:write` - Send messages on a user's behalf
+   - `search:read` - Search workspace content
+3. Install the app to your workspace
+4. Copy the "User OAuth Token" (starts with `xoxp-`)
+
+**Features:**
+
+- Access channel messages and history
+- Send messages on behalf of the user
+- Search workspace content
+- Manage direct messages and group messages
+- View workspace users and channel information
+
 Notes:
 
 - The CLI writes/updates your MCP config automatically; restart / reload the Claude extension if it doesn't auto-detect.
@@ -282,7 +335,7 @@ Verification:
 claude mcp list
 ```
 
-You should see entries named `asana`, `github_enterprise`, `github_public`, `ref`, etc. Then in the editor, ask Claude to list a repository file (GitHub), search Asana tasks, or use a ref-tools command to confirm connectivity.
+You should see entries named `asana`, `github_enterprise`, `github_public`, `ref`, `slack`, etc. Then in the editor, ask Claude to list a repository file (GitHub), search Asana tasks, check Slack messages, or use a ref-tools command to confirm connectivity.
 
 ---
 

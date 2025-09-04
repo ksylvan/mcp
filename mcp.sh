@@ -32,13 +32,14 @@ get_server_name() {
         github_public) echo "GitHub Public" ;;
         ref) echo "Ref Tools" ;;
         sequentialthinking) echo "Sequential Thinking" ;;
+        slack) echo "Slack Server" ;;
         *) echo "" ;;
     esac
 }
 
 get_server_command() {
     case "$1" in
-        asana|brave|github_enterprise|github_public|ref|sequentialthinking) echo "$1" ;;
+        asana|brave|github_enterprise|github_public|ref|sequentialthinking|slack) echo "$1" ;;
         *) echo "" ;;
     esac
 }
@@ -51,6 +52,7 @@ get_server_env_vars() {
         github_public) echo "GITHUB_PUBLIC_ACCESS_TOKEN" ;;
         ref) echo "" ;;
         sequentialthinking) echo "" ;;
+        slack) echo "SLACK_MCP_XOXP_TOKEN" ;;
         *) echo "" ;;
     esac
 }
@@ -73,6 +75,7 @@ Servers:
     github_public         GitHub Public MCP server
     ref                   Ref Tools MCP server
     sequentialthinking    Sequential Thinking MCP server
+    slack                 Slack Server MCP server
 
 Install Options:
     --dry-run            Show what would be installed without making changes
@@ -282,7 +285,7 @@ handle_install() {
 
     # If no servers specified, install all
     if [[ ${#servers[@]} -eq 0 ]]; then
-        servers=("asana" "brave" "github_enterprise" "github_public" "ref" "sequentialthinking")
+        servers=("asana" "brave" "github_enterprise" "github_public" "ref" "sequentialthinking" "slack")
         echo -e "${BLUE}Installing all MCP servers...${NC}\n"
     else
         echo -e "${BLUE}Installing selected MCP servers...${NC}\n"
@@ -379,6 +382,10 @@ case "$1" in
 
     sequentialthinking)
         exec docker run --rm -i "$SEQUENTIAL_THINKING_DOCKER_IMAGE"
+        ;;
+
+    slack)
+        exec npx -y slack-mcp-server@latest --transport stdio
         ;;
 
     "")
