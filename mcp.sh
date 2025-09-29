@@ -28,6 +28,7 @@ get_server_name() {
     case "$1" in
         asana) echo "Asana Server" ;;
         brave) echo "Brave Search" ;;
+        chrome_devtools) echo "Chrome DevTools" ;;
         github_enterprise) echo "GitHub Enterprise" ;;
         github_public) echo "GitHub Public" ;;
         ref) echo "Ref Tools" ;;
@@ -39,7 +40,7 @@ get_server_name() {
 
 get_server_command() {
     case "$1" in
-        asana|brave|github_enterprise|github_public|ref|sequentialthinking|slack) echo "$1" ;;
+        asana|brave|chrome_devtools|github_enterprise|github_public|ref|sequentialthinking|slack) echo "$1" ;;
         *) echo "" ;;
     esac
 }
@@ -48,6 +49,7 @@ get_server_env_vars() {
     case "$1" in
         asana) echo "" ;;
         brave) echo "BRAVE_API_KEY" ;;
+        chrome_devtools) echo "" ;;
         github) echo "GITHUB_ENTERPRISE_ACCESS_TOKEN" ;;
         github_public) echo "GITHUB_PUBLIC_ACCESS_TOKEN" ;;
         ref) echo "" ;;
@@ -71,6 +73,7 @@ Commands:
 Servers:
     asana                 Asana Server MCP server
     brave                 Brave Search MCP server
+    chrome_devtools       Chrome DevTools MCP server
     github_enterprise     GitHub Enterprise MCP server
     github_public         GitHub Public MCP server
     ref                   Ref Tools MCP server
@@ -285,7 +288,7 @@ handle_install() {
 
     # If no servers specified, install all
     if [[ ${#servers[@]} -eq 0 ]]; then
-        servers=("asana" "brave" "github_enterprise" "github_public" "ref" "sequentialthinking" "slack")
+        servers=("asana" "brave" "chrome_devtools" "github_enterprise" "github_public" "ref" "sequentialthinking" "slack")
         echo -e "${BLUE}Installing all MCP servers...${NC}\n"
     else
         echo -e "${BLUE}Installing selected MCP servers...${NC}\n"
@@ -363,6 +366,10 @@ case "$1" in
 
     brave)
         exec npx -y @brave/brave-search-mcp-server --transport stdio
+        ;;
+
+    chrome_devtools)
+        exec npx chrome-devtools-mcp@latest
         ;;
 
     github_enterprise)

@@ -2,7 +2,7 @@
 
 Author: [Kayvan Sylvan](https://git.standard.re/kayvan)
 
-This repo provides **very fast, copy/paste setup** for recommended (opinionated) Model Context Protocol (MCP) servers for use with **Claude Code**. It currently includes a unified launcher script that can start multiple servers (Asana, GitHub, Ref Tools, Brave Search, Slack, and Sequential Thinking) with automatic installation.
+This repo provides **very fast, copy/paste setup** for recommended (opinionated) Model Context Protocol (MCP) servers for use with **Claude Code**. It currently includes a unified launcher script that can start multiple servers (Asana, Chrome DevTools, GitHub, Ref Tools, Brave Search, Slack, and Sequential Thinking) with automatic installation.
 
 ---
 
@@ -97,7 +97,7 @@ Run `mcp.sh` without any arguments to see the list of MCP servers:
 
 ```bash
 ./mcp.sh
-Usage: ./mcp.sh {asana|github_enterprise|github_public|ref|slack|sequentialthinking}
+Usage: ./mcp.sh {asana|chrome_devtools|github_enterprise|github_public|ref|slack|sequentialthinking}
 ```
 
 GitHub Enterprise MCP server:
@@ -228,6 +228,41 @@ claude mcp add --scope user brave "${PWD}/mcp.sh" brave
 - `BRAVE_API_KEY` environment variable
 - Get your API key from [Brave Search API](https://brave.com/search/api/)
 
+#### Chrome DevTools Server
+
+Enables AI coding assistants to debug web pages directly in Chrome, providing real-time verification of code changes, network diagnostics, and performance auditing.
+
+**Quick install:**
+
+```bash
+./mcp.sh install chrome_devtools
+```
+
+**Manual install:**
+
+```bash
+claude mcp add --scope user chrome_devtools "${PWD}/mcp.sh" chrome_devtools
+```
+
+**Requirements:**
+
+- Google Chrome browser installed
+- No additional environment variables required
+
+**Features:**
+
+- Real-time debugging of web pages
+- Performance monitoring and tracing
+- Network error diagnosis
+- Console error detection
+- Automated performance audits
+- Live styling and layout debugging
+- User behavior simulation
+
+**Example Usage:**
+
+Ask Claude: "Please check the LCP (Largest Contentful Paint) of web.dev" and it will use Chrome DevTools to analyze the page performance.
+
 #### Asana Server
 
 Provides access to Asana workspaces, projects, and tasks for project management integration.
@@ -335,7 +370,7 @@ Verification:
 claude mcp list
 ```
 
-You should see entries named `asana`, `github_enterprise`, `github_public`, `ref`, `slack`, etc. Then in the editor, ask Claude to list a repository file (GitHub), search Asana tasks, check Slack messages, or use a ref-tools command to confirm connectivity.
+You should see entries named `asana`, `chrome_devtools`, `github_enterprise`, `github_public`, `ref`, `slack`, etc. Then in the editor, ask Claude to list a repository file (GitHub), search Asana tasks, check Slack messages, debug a web page (Chrome DevTools), or use a ref-tools command to confirm connectivity.
 
 ---
 
