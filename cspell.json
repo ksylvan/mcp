@@ -1,11 +1,15 @@
 {
 	"words": [
 		"asana",
+		"Contentful",
 		"GHES",
 		"korotovsky",
 		"mpim",
 		"sequentialthinking",
 		"XOXP"
 	],
-	"ignorePaths": ["env.sh", "env-example.sh"]
+	"ignorePaths": [
+		"env.sh",
+		"env-example.sh"
+	]
 }
